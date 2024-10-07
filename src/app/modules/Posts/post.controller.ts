@@ -1,5 +1,5 @@
 import { TImageFiles } from "../../interfaces/image.interface";
-import { postServices } from "./post.services";
+import { getPostById, postServices } from "./post.services";
 import AppError from "../../utils/errors/AppError";
 import { catchAsync } from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
@@ -9,23 +9,26 @@ import httpStatus from "http-status";
 export const createPost = catchAsync(async (req, res) => {
   console.log("Request Body:", req.body);
   console.log("Uploaded Files:", req.files);
+
+  // Ensure that the 'postImages' are uploaded
   if (!req.files || !req.files.postImages) {
     throw new AppError(400, "Please upload an image");
   }
 
-  const post = await postServices.createPostIntoDB(
-    req.body,
-    req.files as TImageFiles
-  );
+  // Parse 'data' (assuming it's passed as JSON string from frontend or Postman)
+  const parsedData = JSON.parse(req.body.data);
 
+  // Pass parsedData (contains post info) and req.files (images) to the service
+  const post = await postServices.createPostIntoDB(parsedData, req.files);
+
+  // Send successful response
   sendResponse(res, {
     success: true,
-    statusCode: httpStatus.CREATED,
+    statusCode: 201, // Created
     message: "Post created successfully",
     data: post,
   });
 });
-
 // Update a Post
 export const updatePost = catchAsync(async (req, res) => {
   const postId = req.params.id;
@@ -44,6 +47,46 @@ export const updatePost = catchAsync(async (req, res) => {
   });
 });
 
+// Get All Posts
+export const getAllPosts = catchAsync(async (req, res) => {
+  const posts = await postServices.getAllPostsFromDB();
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "All posts retrieved successfully",
+    data: posts,
+  });
+});
+
+// Get Posts by User ID
+export const getPostsByUser = catchAsync(async (req, res) => {
+  const userId = req.params.userId; // Assuming userId is passed as a URL parameter
+  const posts = await postServices.getPostsByUserId(userId);
+
+  if (posts.length === 0) {
+    throw new AppError(404, "No posts found for this user");
+  }
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Posts by user retrieved successfully",
+    data: posts,
+  });
+});
+
+const fetchPostById = catchAsync(async (req, res) => {
+  const { postId } = req.params;
+  const post = await postServices.getPostById(postId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Post retrieved successfully",
+    data: post,
+  });
+});
 // Delete a Post
 export const deletePost = catchAsync(async (req, res) => {
   const postId = req.params.id;
@@ -117,5 +160,8 @@ export const postController = {
   updatePost,
   createPost,
   upvotePost,
-  // downvotePost,
+  downvotePost,
+  getAllPosts,
+  getPostsByUser,
+  fetchPostById,
 };

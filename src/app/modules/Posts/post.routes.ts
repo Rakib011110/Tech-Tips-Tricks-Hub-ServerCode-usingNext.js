@@ -8,6 +8,10 @@ import {
   createPost,
   deletePost,
   downvotePost,
+  fetchPostById,
+  getAllPosts,
+  getPostsByUser,
+  postController,
   searchAndFilterPosts,
   updatePost,
   upvotePost,
@@ -34,6 +38,13 @@ router.patch(
   //   validateRequest(PostValidation.updatePostValidationSchema),
   updatePost
 );
+
+// Get All Posts
+router.get("/:id", postController.fetchPostById);
+router.get("/", getAllPosts);
+
+// Get Posts by User ID
+router.get("/user/:userId", getPostsByUser); // Assuming the userId will be passed as a route parameter
 
 // auth(USER_ROLE.USER)
 router.delete("/:id", deletePost);

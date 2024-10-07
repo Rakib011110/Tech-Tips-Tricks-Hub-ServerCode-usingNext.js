@@ -21,7 +21,7 @@ export interface IPost {
   isPremium: boolean;
   upvotes?: number;
   downvotes?: number;
-  isPremiumContent: boolean;
+  isPremiumContent?: boolean;
   upvotedBy?: mongoose.Types.ObjectId[];
   downvotedBy?: mongoose.Types.ObjectId[];
   comments: mongoose.Types.ObjectId[]; // Array of comment references

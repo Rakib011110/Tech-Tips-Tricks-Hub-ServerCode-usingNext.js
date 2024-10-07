@@ -8,19 +8,57 @@ import { JwtPayload } from "jsonwebtoken";
 import { title } from "process";
 
 // Create Post Service Function
+// const createPostIntoDB = async (payload: IPost, images: TImageFiles) => {
+//   const { postImages } = images; // Corrected here
+//   payload.images = postImages.map((image) => image.path);
+
+//   const userId = payload.author;
+
+//   // Create new post in the DB
+//   const newPost = await Post.create(payload);
+
+//   // Push the post ID to the user's post array
+//   await User.findByIdAndUpdate(userId, { $push: { posts: newPost._id } });
+
+//   return newPost;
+// };
+
+// The function to insert the post into the database
 const createPostIntoDB = async (payload: IPost, images: TImageFiles) => {
-  const { postImages } = images; // Corrected here
+  const { postImages } = images; // Access uploaded files from 'postImages'
+
+  // Save image paths to the payload's 'images' array
   payload.images = postImages.map((image) => image.path);
 
-  const userId = payload.author;
+  const userId = payload.author; // Extract author ID from the payload
 
-  // Create new post in the DB
+  // Create new post in the database
   const newPost = await Post.create(payload);
 
-  // Push the post ID to the user's post array
+  // Push the new post's ID to the user's 'posts' array
   await User.findByIdAndUpdate(userId, { $push: { posts: newPost._id } });
 
-  return newPost;
+  return newPost; // Return the newly created post
+};
+
+export default { createPostIntoDB };
+
+const getAllPostsFromDB = async () => {
+  return await Post.find().populate("author", "name email"); // You can customize which fields to populate
+};
+
+// Get Posts by User ID Service Function
+const getPostsByUserId = async (userId: string) => {
+  return await Post.find({ author: userId }).populate("author", "name email");
+};
+
+// Fetch a single post by ID
+export const getPostById = async (postId: string) => {
+  const post = await Post.findById(postId);
+  if (!post) {
+    throw new Error("Post not found");
+  }
+  return post;
 };
 
 // Update Post Service Function
@@ -34,7 +72,6 @@ const updatePostInDB = async (
 
     payload.images = postImages?.map((image) => image.path);
   }
-
   const updatedPost = await Post.findByIdAndUpdate(postId, payload, {
     new: true,
   });
@@ -159,4 +196,7 @@ export const postServices = {
   upvotePostInDB,
   downvotePostInDB,
   searchAndFilterPosts,
+  getPostsByUserId,
+  getAllPostsFromDB,
+  getPostById,
 };
