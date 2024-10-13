@@ -1,10 +1,14 @@
-import mongoose, { Schema } from "mongoose";
-import { IComment } from "./comment.interface";
+import mongoose, { Schema, Document } from "mongoose";
+
+export interface IComment extends Document {
+  content: string;
+  author?: mongoose.Schema.Types.ObjectId;
+  createdAt?: Date;
+}
 
 const commentSchema = new Schema<IComment>({
-  content: { type: String, required: true },
-  author: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  post: { type: mongoose.Schema.Types.ObjectId, ref: "Post", required: true }, // Ensure this is always required
+  content: { type: String },
+  author: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   createdAt: { type: Date, default: Date.now },
 });
 

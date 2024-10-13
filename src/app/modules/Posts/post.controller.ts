@@ -1,25 +1,15 @@
-import { TImageFiles } from "../../interfaces/image.interface";
-import { getPostById, postServices } from "./post.services";
+import { addCommentToPost, getPostById, postServices } from "./post.services";
 import AppError from "../../utils/errors/AppError";
 import { catchAsync } from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import httpStatus from "http-status";
+import { IComment } from "./post.interface";
 
 // Create a new Post
 export const createPost = catchAsync(async (req, res) => {
   console.log("Request Body:", req.body);
-  console.log("Uploaded Files:", req.files);
 
-  // Ensure that the 'postImages' are uploaded
-  if (!req.files || !req.files.postImages) {
-    throw new AppError(400, "Please upload an image");
-  }
-
-  // Parse 'data' (assuming it's passed as JSON string from frontend or Postman)
-  const parsedData = JSON.parse(req.body.data);
-
-  // Pass parsedData (contains post info) and req.files (images) to the service
-  const post = await postServices.createPostIntoDB(parsedData, req.files);
+  const post = await postServices.createPostIntoDB(req.body);
 
   // Send successful response
   sendResponse(res, {
@@ -29,15 +19,44 @@ export const createPost = catchAsync(async (req, res) => {
     data: post,
   });
 });
+
+// export const createPost = catchAsync(async (req, res) => {
+//   console.log("Request Body:", req.body);
+//   console.log("Uploaded Files:", req.files);
+
+//   // Ensure that the 'postImages' are uploaded
+//   const files = req.files as TImageFiles; // Type assertion to TImageFiles
+
+//   if (!files || !files.postImages) {
+//     throw new AppError(400, "Please upload an image");
+//   }
+
+//   // Parse 'data' (assuming it's passed as JSON string from frontend or Postman)
+//   const parsedData = JSON.parse(req.body.data);
+
+//   // Wrap the postImages array into an object to match TImageFiles type
+//   const postImages: TImageFiles = {
+//     postImages: files.postImages,
+//   };
+
+//   // Pass parsedData (contains post info) and postImages (images) to the service
+//   const post = await postServices.createPostIntoDB(parsedData, postImages);
+
+//   // Send successful response
+//   sendResponse(res, {
+//     success: true,
+//     statusCode: 201, // Created
+//     message: "Post created successfully",
+//     data: post,
+//   });
+// });
 // Update a Post
 export const updatePost = catchAsync(async (req, res) => {
   const postId = req.params.id;
 
-  const post = await postServices.updatePostInDB(
-    postId,
-    req.body,
-    req.files as TImageFiles
-  );
+  console.log("Update Payload:", req.body);
+
+  const post = await postServices.updatePostInDB(postId, req.body);
 
   sendResponse(res, {
     success: true,
@@ -77,7 +96,7 @@ export const getPostsByUser = catchAsync(async (req, res) => {
 });
 
 const fetchPostById = catchAsync(async (req, res) => {
-  const { postId } = req.params;
+  const postId = req.params.id;
   const post = await postServices.getPostById(postId);
 
   sendResponse(res, {
@@ -88,19 +107,6 @@ const fetchPostById = catchAsync(async (req, res) => {
   });
 });
 // Delete a Post
-export const deletePost = catchAsync(async (req, res) => {
-  const postId = req.params.id;
-  const userId = req.user.id; // Assuming JWT middleware attaches userId
-
-  const post = await postServices.deletePostFromDB(postId, userId);
-
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.OK,
-    message: "Post deleted successfully",
-    data: post,
-  });
-});
 
 export const upvotePost = catchAsync(async (req, res) => {
   const userId = req.user?._id;
@@ -134,6 +140,50 @@ export const downvotePost = catchAsync(async (req, res) => {
     data: post,
   });
 });
+
+// Comment on a Post
+// export const addComment = catchAsync(async (req, res) => {
+//   const postId = req.params.id; // Ensure consistency in your parameter naming (should be "id" or "_id" consistently)
+
+//   // Ensure the postId is valid
+//   if (!mongoose.Types.ObjectId.isValid(postId)) {
+//     throw new AppError(400, "Invalid Post ID");
+//   }
+
+//   const commentData: IComment = {
+//     content: req.body.content,
+//     author: req.user._id, // Assuming the JWT middleware attaches the user ID
+//     post: postId,
+//     createdAt: new Date(), // Explicitly set `createdAt` for the type requirements
+//   };
+
+//   const comment = await addCommentToPost(postId, commentData);
+
+//   sendResponse(res, {
+//     success: true,
+//     statusCode: httpStatus.CREATED,
+//     message: "Comment added successfully",
+//     data: comment,
+//   });
+// });
+
+export const addComment = catchAsync(async (req, res) => {
+  const postId = req.params.id;
+  const commentData: Partial<IComment> = {
+    content: req.body.content,
+    author: req.user._id, // Assuming the JWT middleware attaches the user ID
+  };
+
+  // Add comment to the post
+  const comment = await addCommentToPost(postId, commentData);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.CREATED,
+    message: "Comment added successfully",
+    data: comment,
+  });
+});
 // ---------search start here
 
 export const searchAndFilterPosts = catchAsync(async (req, res) => {
@@ -152,6 +202,20 @@ export const searchAndFilterPosts = catchAsync(async (req, res) => {
     statusCode: httpStatus.OK,
     message: "Posts retrieved successfully",
     data: posts,
+  });
+});
+
+export const deletePost = catchAsync(async (req, res) => {
+  const postId = req.params.id;
+  console.log(postId);
+
+  const post = await postServices.deletePostFromDB(postId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Post deleted successfully",
+    data: post,
   });
 });
 

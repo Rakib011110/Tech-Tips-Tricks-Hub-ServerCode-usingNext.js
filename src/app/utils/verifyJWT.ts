@@ -6,9 +6,14 @@ export const createToken = (
     _id?: string;
     name: string;
     email: string;
+    profilePicture?: string;
     mobileNumber?: string;
     role: keyof typeof USER_ROLE;
     status: keyof typeof USER_STATUS;
+    verified: boolean; // New field
+    followers: string[]; // New field
+    following: string[]; // New field
+    premiumUser: boolean; // New field
   },
   secret: string,
   expiresIn: string

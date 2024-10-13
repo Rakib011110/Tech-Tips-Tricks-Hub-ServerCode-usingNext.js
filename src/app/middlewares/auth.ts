@@ -14,7 +14,10 @@ const auth = (...requiredRoles: (keyof typeof USER_ROLE)[]) => {
 
     // checking if the token is missing
     if (!token) {
-      throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized!");
+      throw new AppError(
+        httpStatus.UNAUTHORIZED,
+        "Access denied. No token provided."
+      );
     }
 
     const decoded = verifyToken(
@@ -24,18 +27,19 @@ const auth = (...requiredRoles: (keyof typeof USER_ROLE)[]) => {
 
     const { role, email, iat } = decoded;
 
-    // checking if the user is exist
     const user = await User.isUserExistsByEmail(email);
 
     if (!user) {
-      throw new AppError(httpStatus.NOT_FOUND, "This user is not found !");
+      throw new AppError(httpStatus.NOT_FOUND, "User not found in our system.");
     }
-    // checking if the user is already deleted
 
     const status = user?.status;
 
     if (status === "BLOCKED") {
-      throw new AppError(httpStatus.FORBIDDEN, "This user is blocked !");
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        "Access denied. Your account is blocked."
+      );
     }
 
     if (
@@ -45,11 +49,17 @@ const auth = (...requiredRoles: (keyof typeof USER_ROLE)[]) => {
         iat as number
       )
     ) {
-      throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized !");
+      throw new AppError(
+        httpStatus.UNAUTHORIZED,
+        "Unauthorized. Password has been changed recently."
+      );
     }
 
     if (requiredRoles && !requiredRoles.includes(role)) {
-      throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized");
+      throw new AppError(
+        httpStatus.UNAUTHORIZED,
+        "You do not have the necessary permissions."
+      );
     }
 
     req.user = decoded as JwtPayload;

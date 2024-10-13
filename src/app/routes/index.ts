@@ -22,11 +22,11 @@ const moduleRoutes = [
     route: PostRoutes,
   },
   {
-    path: "/comments", // Corrected from "/users" to "/posts"
+    path: "/comments",
     route: commentRoutes,
   },
   {
-    path: "/payments", // Corrected from "/users" to "/posts"
+    path: "/payments",
     route: paymentRoute,
   },
   {

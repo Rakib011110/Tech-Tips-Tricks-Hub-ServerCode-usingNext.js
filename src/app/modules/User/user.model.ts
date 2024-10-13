@@ -16,6 +16,10 @@ const userSchema = new Schema<TUser, IUserModel>(
       enum: Object.keys(USER_ROLE),
       required: true,
     },
+    completePayment: {
+      type: Number,
+      default: 0, // Default is 0 for new users
+    },
     email: {
       type: String,
       required: true,
@@ -28,7 +32,7 @@ const userSchema = new Schema<TUser, IUserModel>(
     password: {
       type: String,
       required: true,
-      select: false, // Ensure the password is not fetched by default
+      select: false,
     },
     passwordChangedAt: {
       type: Date,
@@ -47,6 +51,7 @@ const userSchema = new Schema<TUser, IUserModel>(
       type: Boolean,
       default: false,
     },
+
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     posts: [

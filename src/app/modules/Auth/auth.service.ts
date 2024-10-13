@@ -30,6 +30,11 @@ const registerUser = async (payload: TRegisterUser) => {
     mobileNumber: newUser.mobileNumber,
     role: newUser.role,
     status: newUser.status,
+    profilePicture: newUser.profilePicture, // Add profilePicture here
+    verified: newUser.verified, // New field
+    followers: newUser.followers, // New field
+    following: newUser.following, // New field
+    premiumUser: newUser.premiumUser, // New field
   };
 
   const accessToken = createToken(
@@ -79,6 +84,11 @@ const loginUser = async (payload: TLoginUser) => {
     mobileNumber: user.mobileNumber,
     role: user.role,
     status: user.status,
+    profilePicture: user.profilePicture, // Add profilePicture here
+    verified: user.verified, // New field
+    followers: user.followers, // New field
+    following: user.following, // New field
+    premiumUser: user.premiumUser, // New field
   };
 
   const accessToken = createToken(
@@ -178,8 +188,13 @@ const refreshToken = async (token: string) => {
     name: user.name,
     email: user.email,
     mobileNumber: user.mobileNumber,
+    profilePicture: user.profilePicture,
     role: user.role,
     status: user.status,
+    verified: user.verified, // New field
+    followers: user.followers, // New field
+    following: user.following, // New field
+    premiumUser: user.premiumUser, // New field
   };
 
   const accessToken = createToken(

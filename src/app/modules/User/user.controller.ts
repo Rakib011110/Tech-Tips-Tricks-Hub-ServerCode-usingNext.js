@@ -58,7 +58,8 @@ const getSingleUser = catchAsync(async (req, res) => {
 // ---------------------
 
 export const handleFollowUser = catchAsync(async (req, res) => {
-  const { userId, targetUserId } = req.body;
+  const { _id: userId } = req.user; // Assuming `auth` middleware adds user to req
+  const { id: targetUserId } = req.params;
 
   const updatedUser = await followUser(userId, targetUserId);
   sendResponse(res, {
@@ -70,7 +71,8 @@ export const handleFollowUser = catchAsync(async (req, res) => {
 });
 
 export const handleUnfollowUser = catchAsync(async (req, res) => {
-  const { userId, targetUserId } = req.body;
+  const { _id: userId } = req.user; // Assuming `auth` middleware adds user to req
+  const { id: targetUserId } = req.params;
 
   const updatedUser = await unfollowUser(userId, targetUserId);
   sendResponse(res, {
@@ -105,9 +107,55 @@ export const getFollowing = catchAsync(async (req, res) => {
     data: following,
   });
 });
+
+// Controller for updating user verification status
+export const updateUserVerification = catchAsync(async (req, res) => {
+  const { id } = req.params; // user ID
+  const { verified } = req.body; // New verification status
+
+  const updatedUser = await UserServices.updateVerification(id, verified);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "User verification status updated successfully",
+    data: updatedUser,
+  });
+});
+
+// Controller for updating user status (ACTIVE/BLOCKED)
+export const updateUserStatus = catchAsync(async (req, res) => {
+  const { id } = req.params; // user ID
+  const { status } = req.body; // New user status
+
+  const updatedUser = await UserServices.updateStatus(id, status);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "User status updated successfully",
+    data: updatedUser,
+  });
+});
+export const deleteUser = catchAsync(async (req, res) => {
+  const { id } = req.params; // user ID
+
+  const deletedUser = await UserServices.deleteUser(id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "User deleted successfully",
+    data: deletedUser,
+  });
+});
+
 export const UserControllers = {
   getSingleUser,
   updateUserProfile,
   userRegister,
   getAllUsers,
+  updateUserStatus,
+  updateUserVerification,
+  deleteUser,
 };

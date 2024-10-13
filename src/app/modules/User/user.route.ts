@@ -28,12 +28,30 @@ router.patch(
   UserControllers.updateUserProfile
 );
 
+router.patch(
+  "/verify/:id",
+  auth(USER_ROLE.ADMIN), // Only admin can verify users
+  UserControllers.updateUserVerification
+);
+
+router.patch(
+  "/status/:id",
+  auth(USER_ROLE.ADMIN), // Only admin can update user status
+  UserControllers.updateUserStatus
+);
+
 router.get("/", UserControllers.getAllUsers);
 router.get("/:id", UserControllers.getSingleUser);
-router.post("/follow", auth(USER_ROLE.USER), handleFollowUser);
-router.post("/unfollow", auth(USER_ROLE.USER), handleUnfollowUser);
+router.post("/follow/:id", auth(USER_ROLE.USER), handleFollowUser);
+router.post("/unfollow/:id", auth(USER_ROLE.USER), handleUnfollowUser);
 // Get followers list
-router.get("/followers/:userId", auth(USER_ROLE.USER), getFollowers);
+router.get("/followers/:userId", getFollowers);
 
 // Get following list
-router.get("/following/:userId", auth(USER_ROLE.USER), getFollowing);
+router.get("/following/:userId", getFollowing);
+// In src/routes/user.routes.ts
+router.delete(
+  "/:id",
+  auth(USER_ROLE.ADMIN), // Only admin can delete users
+  UserControllers.deleteUser
+);

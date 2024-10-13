@@ -1,41 +1,18 @@
-import { TImageFiles } from "../../interfaces/image.interface";
-import { IPost } from "./post.interface";
+import { IComment, IPost } from "./post.interface";
 import { Post } from "./post.model";
 import { User } from "../User/user.model";
 import AppError from "../../utils/errors/AppError";
 import { TUser } from "../User/user.interface";
 import { JwtPayload } from "jsonwebtoken";
 import { title } from "process";
+import { Comment } from "../Comment/comment.model";
+import mongoose from "mongoose";
 
-// Create Post Service Function
-// const createPostIntoDB = async (payload: IPost, images: TImageFiles) => {
-//   const { postImages } = images; // Corrected here
-//   payload.images = postImages.map((image) => image.path);
+const createPostIntoDB = async (payload: IPost) => {
+  const userId = payload.author;
 
-//   const userId = payload.author;
-
-//   // Create new post in the DB
-//   const newPost = await Post.create(payload);
-
-//   // Push the post ID to the user's post array
-//   await User.findByIdAndUpdate(userId, { $push: { posts: newPost._id } });
-
-//   return newPost;
-// };
-
-// The function to insert the post into the database
-const createPostIntoDB = async (payload: IPost, images: TImageFiles) => {
-  const { postImages } = images; // Access uploaded files from 'postImages'
-
-  // Save image paths to the payload's 'images' array
-  payload.images = postImages.map((image) => image.path);
-
-  const userId = payload.author; // Extract author ID from the payload
-
-  // Create new post in the database
   const newPost = await Post.create(payload);
 
-  // Push the new post's ID to the user's 'posts' array
   await User.findByIdAndUpdate(userId, { $push: { posts: newPost._id } });
 
   return newPost; // Return the newly created post
@@ -44,7 +21,7 @@ const createPostIntoDB = async (payload: IPost, images: TImageFiles) => {
 export default { createPostIntoDB };
 
 const getAllPostsFromDB = async () => {
-  return await Post.find().populate("author", "name email"); // You can customize which fields to populate
+  return await Post.find().populate("author"); // You can customize which fields to populate
 };
 
 // Get Posts by User ID Service Function
@@ -62,37 +39,21 @@ export const getPostById = async (postId: string) => {
 };
 
 // Update Post Service Function
-const updatePostInDB = async (
+export const updatePostInDB = async (
   postId: string,
-  payload: Partial<IPost>,
-  images?: TImageFiles
+  payload: Partial<IPost>
 ) => {
-  if (images) {
-    const { postImages } = images; // Ensure this is the correct naming
-
-    payload.images = postImages?.map((image) => image.path);
-  }
+  // Use findByIdAndUpdate with full payload
   const updatedPost = await Post.findByIdAndUpdate(postId, payload, {
     new: true,
+    runValidators: true,
   });
+
   if (!updatedPost) {
     throw new AppError(404, "Post not found");
   }
 
   return updatedPost;
-};
-
-// Delete Post Service Function
-const deletePostFromDB = async (postId: string, userId: string) => {
-  const post = await Post.findOneAndDelete({ _id: postId, author: userId });
-  if (!post) {
-    throw new AppError(404, "Post not found or not authorized");
-  }
-
-  // Remove post reference from the user
-  await User.findByIdAndUpdate(userId, { $pull: { posts: postId } });
-
-  return post;
 };
 
 const upvotePostInDB = async (postId: string, userId: JwtPayload["_id"]) => {
@@ -161,6 +122,30 @@ const downvotePostInDB = async (postId: string, userId: JwtPayload["_id"]) => {
   return post;
 };
 
+export const addCommentToPost = async (
+  postId: string,
+  commentData: Partial<IComment>
+) => {
+  // Properly convert postId to ObjectId
+  commentData.post = new mongoose.Types.ObjectId(postId);
+
+  // Create a new comment
+  const comment = await Comment.create(commentData);
+
+  // Add the comment to the post's comments array
+  const post = await Post.findByIdAndUpdate(
+    postId,
+    { $push: { comments: comment } }, // Push the entire comment, not just the ID
+    { new: true }
+  ).populate("comments");
+
+  if (!post) {
+    throw new AppError(404, "Post not found");
+  }
+
+  return comment;
+};
+
 //  search methods start here
 
 export const searchAndFilterPosts = async (searchTerm: string, filter: any) => {
@@ -189,6 +174,21 @@ export const searchAndFilterPosts = async (searchTerm: string, filter: any) => {
   return await Post.find(query).populate("author", "name email"); // Populate author data if needed
 };
 
+const deletePostFromDB = async (postId: string) => {
+  // Delete the post by postId
+  const post = await Post.findOneAndDelete({ _id: postId });
+  console.log("posts", post);
+
+  // If the post is not found, throw an error
+  if (!post) {
+    throw new AppError(404, "Post not found");
+  }
+
+  // Optionally, you can remove the post reference from the user if needed
+  await User.updateMany({}, { $pull: { posts: postId } });
+
+  return post; // Optionally return the deleted post
+};
 export const postServices = {
   createPostIntoDB,
   updatePostInDB,

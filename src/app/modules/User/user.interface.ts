@@ -4,7 +4,7 @@ import { USER_ROLE, USER_STATUS } from "./user.constant"; // Removed USER_STATUS
 
 export type TUser = {
   _id?: string;
-  name: string; // Changed from 'name' to 'username'
+  name: string;
   role: keyof typeof USER_ROLE;
   email: string;
   password: string;
@@ -18,7 +18,8 @@ export type TUser = {
   posts: string[];
   createdAt?: Date;
   updatedAt?: Date;
-  premiumUser: boolean; // New field to indicate premium status
+  premiumUser: boolean;
+  completePayment: number; // New field for tracking user payments
 };
 
 export interface IUserModel extends Model<TUser> {

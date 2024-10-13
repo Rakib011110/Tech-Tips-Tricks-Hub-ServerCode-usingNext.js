@@ -8,15 +8,18 @@ import config from "./app/config";
 let server: Server;
 
 process.on("uncaughtException", (error) => {
-  console.error("Uncaught Exception:", error);
+  console.error("Something went wrong! Uncaught exception detected:", error);
   process.exit(1);
 });
 
 process.on("unhandledRejection", (error) => {
-  console.error("Unhandled Rejection:", error);
+  console.error(
+    "Unexpected error occurred: Unhandled rejection detected!",
+    error
+  );
   if (server) {
     server.close(() => {
-      console.error("Server closed due to unhandled rejection");
+      console.error("Server shutting down due to unhandled rejection.");
       process.exit(1);
     });
   } else {
@@ -27,13 +30,13 @@ process.on("unhandledRejection", (error) => {
 async function bootstrap() {
   try {
     await mongoose.connect(config.db_url as string);
-    console.log("🛢 Database connected successfully");
+    console.log("🛢 Database connected successfully.");
     // await seed();
     server = app.listen(config.port, () => {
-      console.log(`🚀 Application is running on port ${config.port}`);
+      console.log(`🚀 Application is running smoothly on port ${config.port}`);
     });
   } catch (err) {
-    console.error("Failed to connect to database:", err);
+    console.error("Database connection failed:", err);
     process.exit(1);
   }
 }
@@ -41,10 +44,10 @@ async function bootstrap() {
 bootstrap();
 
 process.on("SIGTERM", () => {
-  console.log("SIGTERM received");
+  console.log("SIGTERM signal received, shutting down gracefully.");
   if (server) {
     server.close(() => {
-      console.log("Server closed due to SIGTERM");
+      console.log("Server closed successfully due to SIGTERM.");
       process.exit(0);
     });
   } else {
@@ -53,10 +56,10 @@ process.on("SIGTERM", () => {
 });
 
 process.on("SIGINT", () => {
-  console.log("SIGINT received");
+  console.log("SIGINT signal received, initiating shutdown.");
   if (server) {
     server.close(() => {
-      console.log("Server closed due to SIGINT");
+      console.log("Server closed gracefully due to SIGINT.");
       process.exit(0);
     });
   } else {

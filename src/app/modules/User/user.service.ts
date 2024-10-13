@@ -51,15 +51,14 @@ export const followUser = async (userId: string, targetUserId: string) => {
     throw new Error("Already following this user");
   }
 
-  // Add target user to the following list
-  user.following.push(new mongoose.Types.ObjectId(targetUserId));
+  user.following.push(targetUser._id);
 
-  // Add current user to the followers list of the target user
-  targetUser.followers.push(new mongoose.Types.ObjectId(userId));
+  targetUser.followers.push(user._id);
 
   await user.save();
   await targetUser.save();
-  return user;
+
+  return { following: user.following, followers: targetUser.followers };
 };
 
 export const unfollowUser = async (userId: string, targetUserId: string) => {
@@ -68,7 +67,6 @@ export const unfollowUser = async (userId: string, targetUserId: string) => {
 
   if (!user || !targetUser) throw new Error("User not found");
 
-  // Remove target user from the following list
   user.following = user.following.filter(
     (followingId) => followingId.toString() !== targetUserId
   );
@@ -80,18 +78,50 @@ export const unfollowUser = async (userId: string, targetUserId: string) => {
 
   await user.save();
   await targetUser.save();
-  return user;
+
+  return { following: user.following, followers: targetUser.followers };
 };
+
 export const getFollowersList = async (userId: string) => {
-  const user = await User.findById(userId).populate("followers", "name email"); // Populate followers with their name and email
+  const user = await User.findById(userId).populate(
+    "followers",
+    "name email profilePicture"
+  ); // Populate followers with their name and email
   if (!user) throw new Error("User not found");
   return user.followers;
 };
 
 export const getFollowingList = async (userId: string) => {
-  const user = await User.findById(userId).populate("following", "name email"); // Populate following with their name and email
+  const user = await User.findById(userId).populate(
+    "following",
+    "name email profilePicture"
+  ); // Populate following with their name and email
   if (!user) throw new Error("User not found");
   return user.following;
+};
+
+export const updateVerification = async (userId: string, verified: boolean) => {
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    { verified },
+    { new: true, runValidators: true }
+  );
+  return updatedUser;
+};
+
+export const updateStatus = async (userId: string, status: string) => {
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    { status },
+    { new: true, runValidators: true }
+  );
+  return updatedUser;
+};
+
+const deleteUser = async (userId: string) => {
+  const user = await User.findByIdAndDelete(userId);
+  if (!user) throw new Error("User not found");
+  return user; // Optionally return the deleted user data
 };
 
 export const UserServices = {
@@ -101,4 +131,7 @@ export const UserServices = {
   updateUserProfileDB,
   followUser,
   unfollowUser,
+  updateVerification,
+  updateStatus,
+  deleteUser,
 };

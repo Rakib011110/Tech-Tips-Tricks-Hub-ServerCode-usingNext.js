@@ -12,7 +12,6 @@ export const createPaymentIntent = catchAsync(async (req, res) => {
   const userId = req.user._id; // User id from authenticated request
   const { amount } = req.body;
 
-  // Create a PaymentIntent with the specified amount (in cents)
   const paymentIntent = await stripe.paymentIntents.create({
     amount, // Amount in cents, $20 => 2000
     currency: "usd",
@@ -26,7 +25,6 @@ export const createPaymentIntent = catchAsync(async (req, res) => {
     await user.save();
   }
 
-  // Send response with client secret for front-end to confirm payment
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.CREATED,
